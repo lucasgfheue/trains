@@ -8,16 +8,16 @@ import com.locomotora.registro.ModSonidos;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
@@ -41,16 +41,16 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Locomotora de vapor: una vagoneta con motor propio.
+ * Locomotora de vapor: una vagoneta con motor propio. Hay tres modelos ({@link TipoLocomotora}).
  *
  * <ul>
  *   <li>Clic derecho con carbón / carbón vegetal / bloque de carbón: carga la caldera.</li>
- *   <li>Clic derecho con la mano vacía: subirse como maquinista.</li>
+ *   <li>Clic derecho con la mano vacía: subirse a la cabina como maquinista.</li>
  *   <li>Shift + clic derecho: arrancar (alejándose del jugador) o frenar.</li>
  *   <li>Montado: W sube la marcha, S la baja (hasta marcha atrás), A o D hacen sonar el silbato.</li>
  * </ul>
  *
- * Como cuenta como "vagoneta con motor", empuja a las vagonetas normales que tenga delante.
+ * Empuja a las vagonetas que tenga delante (o detrás, yendo en marcha atrás) manteniéndolas fuera del modelo.
  */
 public class LocomotoraEntity extends AbstractMinecart {
 
@@ -63,17 +63,13 @@ public class LocomotoraEntity extends AbstractMinecart {
     public static final int MARCHA_MINIMA = -1;
     public static final int MARCHA_MAXIMA = 3;
 
-    /** Bloques por tick que recorre en cada marcha hacia adelante (0.4 es el tope de los rieles normales). */
-    private static final double[] VELOCIDADES = {0.0, 0.12, 0.25, 0.4};
+    /** Fracción de la velocidad máxima en cada marcha hacia adelante. */
+    private static final double[] FRACCION_MARCHA = {0.0, 0.3, 0.62, 1.0};
     private static final double VELOCIDAD_MARCHA_ATRAS = 0.1;
-    private static final double ACELERACION = 0.01;
     private static final double FRENADO = 0.012;
+    /** Medio largo de una vagoneta normal, para separarla del frente o de la cola. */
+    private static final double MEDIO_LARGO_VAGONETA = 0.5;
 
-    /** Radio de las ruedas del modelo (3 píxeles) para animarlas. */
-    private static final double RADIO_RUEDA = 3.0 / 16.0;
-    /** Cuánto se corre el asiento hacia la cabina (atrás). */
-    private static final double DESPLAZAMIENTO_ASIENTO = 6.0 / 16.0;
-    private static final float DOS_PI = (float) (Math.PI * 2.0);
     /** Etiqueta vanilla #minecraft:coals (carbón y carbón vegetal, y los de otros mods que la usen). */
     private static final TagKey<Item> CARBONES =
             TagKey.create(Registries.ITEM, ResourceLocation.withDefaultNamespace("coals"));
@@ -87,6 +83,8 @@ public class LocomotoraEntity extends AbstractMinecart {
     private static final EntityDataAccessor<Float> DATA_RUMBO =
             SynchedEntityData.defineId(LocomotoraEntity.class, EntityDataSerializers.FLOAT);
 
+    private final TipoLocomotora tipo;
+
     // ------------------------------------------------- estado del servidor
     private int combustible;
     private int esperaSilbato;
@@ -96,12 +94,13 @@ public class LocomotoraEntity extends AbstractMinecart {
     private int esperaResoplido;
     private int pausaEstado;
 
-    // ------------------------------------------------- estado del cliente (animación)
-    private float anguloRuedas;
-    private float anguloRuedasAnterior;
+    // ------------------------------------------------- estado del cliente (animación de ruedas)
+    private double recorrido;
+    private double recorridoAnterior;
 
-    public LocomotoraEntity(EntityType<? extends LocomotoraEntity> tipo, Level level) {
-        super(tipo, level);
+    public LocomotoraEntity(EntityType<? extends LocomotoraEntity> tipoEntidad, Level level, TipoLocomotora tipo) {
+        super(tipoEntidad, level);
+        this.tipo = tipo;
     }
 
     @Override
@@ -114,6 +113,10 @@ public class LocomotoraEntity extends AbstractMinecart {
 
     // ================================================================= identidad
 
+    public TipoLocomotora getTipo() {
+        return this.tipo;
+    }
+
     /** "FURNACE" hace que el juego la trate como vagoneta con motor (empuja a las demás). */
     @Override
     public AbstractMinecart.Type getMinecartType() {
@@ -122,18 +125,24 @@ public class LocomotoraEntity extends AbstractMinecart {
 
     @Override
     protected Item getDropItem() {
-        return ModItems.LOCOMOTORA.get();
+        return ModItems.porTipo(this.tipo).get();
     }
 
     @Override
     public ItemStack getPickResult() {
-        return new ItemStack(ModItems.LOCOMOTORA.get());
+        return new ItemStack(ModItems.porTipo(this.tipo).get());
     }
 
-    /** El modelo es más grande que la caja de colisión: así no desaparece al mirar la chimenea. */
+    /** El modelo es mucho más grande que la caja de colisión: así no desaparece al mirarlo de cerca. */
     @Override
     public AABB getBoundingBoxForCulling() {
-        return super.getBoundingBoxForCulling().inflate(0.7, 0.0, 0.7).expandTowards(0.0, 1.0, 0.0);
+        return super.getBoundingBoxForCulling().inflate(3.4, 0.0, 3.4).expandTowards(0.0, 2.0, 0.0);
+    }
+
+    /** Más fácil de apuntar con el clic. */
+    @Override
+    public float getPickRadius() {
+        return 0.5F;
     }
 
     // ================================================================= getters / setters
@@ -174,9 +183,9 @@ public class LocomotoraEntity extends AbstractMinecart {
         return this.combustible;
     }
 
-    /** Ángulo de las ruedas interpolado para el renderizado. */
-    public float getAnguloRuedas(float tickParcial) {
-        return Mth.lerp(tickParcial, this.anguloRuedasAnterior, this.anguloRuedas);
+    /** Distancia recorrida (en bloques, interpolada) para girar ruedas y bielas. */
+    public double getRecorrido(float tickParcial) {
+        return Mth.lerp(tickParcial, this.recorridoAnterior, this.recorrido);
     }
 
     // ================================================================= tick
@@ -203,6 +212,7 @@ public class LocomotoraEntity extends AbstractMinecart {
         }
 
         leerControlesDelMaquinista();
+        empujarVagonetasCercanas();
 
         int marcha = getMarcha();
         boolean motorEncendido = this.combustible > 0 && marcha != 0;
@@ -234,9 +244,9 @@ public class LocomotoraEntity extends AbstractMinecart {
         // "Chuf, chuf": el ritmo acompaña a la velocidad
         if (motorEncendido && avance > 0.02) {
             if (--this.esperaResoplido <= 0) {
-                this.level().playSound(null, this.getX(), this.getY(), this.getZ(), ModSonidos.RESOPLIDO.get(),
-                        SoundSource.NEUTRAL, 0.7F, 0.9F + this.random.nextFloat() * 0.2F);
-                this.esperaResoplido = Mth.clamp((int) (1.2 / avance), 3, 20);
+                this.level().playSound(null, this.getX(), this.getY() + 1.0, this.getZ(), ModSonidos.RESOPLIDO.get(),
+                        SoundSource.NEUTRAL, 0.8F, (0.9F + this.random.nextFloat() * 0.2F) * (0.5F + this.tipo.tonoSilbato() * 0.5F));
+                this.esperaResoplido = Mth.clamp((int) (1.4 / avance), 3, 20);
             }
         } else {
             this.esperaResoplido = 0;
@@ -276,8 +286,8 @@ public class LocomotoraEntity extends AbstractMinecart {
             return;
         }
         setMarcha(nueva);
-        this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.LEVER_CLICK,
-                SoundSource.NEUTRAL, 0.4F, nueva == 0 ? 0.6F : 0.9F);
+        this.level().playSound(null, this.getX(), this.getY() + 1.0, this.getZ(), SoundEvents.LEVER_CLICK,
+                SoundSource.NEUTRAL, 0.5F, nueva == 0 ? 0.6F : 0.9F);
         if (anterior == 0 && this.combustible > 0) {
             silbar(); // ¡Partimos!
         }
@@ -291,12 +301,12 @@ public class LocomotoraEntity extends AbstractMinecart {
             return;
         }
         this.esperaSilbato = 50;
-        this.level().playSound(null, this.getX(), this.getY() + 1.0, this.getZ(), ModSonidos.SILBATO.get(),
-                SoundSource.NEUTRAL, 3.0F, 1.0F);
+        double x = this.getX() + frenteX() * this.tipo.silbatoAdelante();
+        double y = this.getY() + this.tipo.silbatoAlto();
+        double z = this.getZ() + frenteZ() * this.tipo.silbatoAdelante();
+        this.level().playSound(null, x, y, z, ModSonidos.SILBATO.get(), SoundSource.NEUTRAL, 4.0F, this.tipo.tonoSilbato());
         if (this.level() instanceof ServerLevel servidor) {
-            servidor.sendParticles(ParticleTypes.CLOUD,
-                    this.getX() + frenteX() * 0.05, this.getY() + 1.0, this.getZ() + frenteZ() * 0.05,
-                    8, 0.05, 0.15, 0.05, 0.02);
+            servidor.sendParticles(ParticleTypes.CLOUD, x, y + 0.1, z, 10, 0.05, 0.2, 0.05, 0.03);
         }
     }
 
@@ -342,14 +352,15 @@ public class LocomotoraEntity extends AbstractMinecart {
             double signo = marcha > 0 ? 1.0 : -1.0;
             double dirX = frenteX() * signo;
             double dirZ = frenteZ() * signo;
+            double velocidad = marcha > 0 ? this.tipo.velocidadMaxima() * FRACCION_MARCHA[marcha] : VELOCIDAD_MARCHA_ATRAS;
             // Llevando pasajero el juego mueve la vagoneta un 25% menos, así que se compensa
-            double objetivo = (marcha > 0 ? VELOCIDADES[marcha] : VELOCIDAD_MARCHA_ATRAS) / (this.isVehicle() ? 0.75 : 1.0);
+            double objetivo = velocidad / (this.isVehicle() ? 0.75 : 1.0);
             if (this.isInWater()) {
                 objetivo *= 0.5;
             }
             double actual = mx * dirX + mz * dirZ;
             if (actual < objetivo) {
-                double empuje = Math.min(ACELERACION, objetivo - actual);
+                double empuje = Math.min(this.tipo.aceleracion(), objetivo - actual);
                 mx += dirX * empuje;
                 mz += dirZ * empuje;
             } else {
@@ -381,11 +392,63 @@ public class LocomotoraEntity extends AbstractMinecart {
         this.setDeltaMovement(mx, 0.0, mz);
     }
 
-    /** El maquinista va sentado en la cabina, que está en la parte de atrás. */
+    /**
+     * La caja de colisión es la de una vagoneta, pero el modelo mide más de 5 bloques:
+     * las vagonetas que quedan delante (o detrás) se empujan para que no se metan dentro del modelo.
+     */
+    private void empujarVagonetasCercanas() {
+        double fx = frenteX();
+        double fz = frenteZ();
+        double alcance = Math.max(this.tipo.largoFrente(), this.tipo.largoAtras()) + 3.5;
+        AABB zona = this.getBoundingBox().inflate(alcance, 0.5, alcance);
+        Vec3 miVelocidad = this.getDeltaMovement();
+        double miAvance = miVelocidad.x * fx + miVelocidad.z * fz;
+
+        for (AbstractMinecart otra : this.level().getEntitiesOfClass(AbstractMinecart.class, zona,
+                v -> v != this && !this.hasPassenger(v))) {
+            double dx = otra.getX() - this.getX();
+            double dz = otra.getZ() - this.getZ();
+            double adelante = dx * fx + dz * fz;
+            double lateral = Math.abs(-dx * fz + dz * fx);
+            if (lateral > 0.8) {
+                continue;
+            }
+            boolean estaDelante = adelante >= 0.0;
+            double medioLargoOtra = MEDIO_LARGO_VAGONETA;
+            if (otra instanceof LocomotoraEntity loco) {
+                boolean alineada = loco.frenteX() * fx + loco.frenteZ() * fz > 0.0;
+                boolean meMuestraElFrente = estaDelante != alineada;
+                medioLargoOtra = meMuestraElFrente ? loco.tipo.largoFrente() : loco.tipo.largoAtras();
+            }
+            double separacionMinima = (estaDelante ? this.tipo.largoFrente() : this.tipo.largoAtras()) + medioLargoOtra;
+            double separacion = Math.abs(adelante);
+            if (separacion >= separacionMinima) {
+                continue;
+            }
+            double signo = estaDelante ? 1.0 : -1.0;
+            Vec3 suVelocidad = otra.getDeltaMovement();
+            double suAvance = suVelocidad.x * fx + suVelocidad.z * fz;
+            // La otra vagoneta tiene que alejarse al menos tan rápido como nos acercamos
+            double objetivo = miAvance + signo * Math.min(0.05, (separacionMinima - separacion) * 0.25);
+            if (signo * (objetivo - suAvance) > 0.0) {
+                double cambio = objetivo - suAvance;
+                otra.setDeltaMovement(suVelocidad.x + fx * cambio, suVelocidad.y, suVelocidad.z + fz * cambio);
+            }
+            // Si la otra no se puede mover (está trabada), no la atravesamos
+            if (separacion < separacionMinima - 0.3 && signo * (miAvance - suAvance) > 0.0) {
+                double correccion = suAvance - miAvance;
+                this.setDeltaMovement(miVelocidad.x + fx * correccion, miVelocidad.y, miVelocidad.z + fz * correccion);
+                miVelocidad = this.getDeltaMovement();
+                miAvance = suAvance;
+            }
+        }
+    }
+
+    /** El maquinista va en la cabina, que está en la parte de atrás. */
     @Override
     public void positionRider(Entity pasajero, Entity.MoveFunction mover) {
         super.positionRider(pasajero, (entidad, x, y, z) -> mover.accept(entidad,
-                x - frenteX() * DESPLAZAMIENTO_ASIENTO, y, z - frenteZ() * DESPLAZAMIENTO_ASIENTO));
+                x - frenteX() * this.tipo.asientoAtras(), y, z - frenteZ() * this.tipo.asientoAtras()));
     }
 
     // ================================================================= interacción
@@ -407,7 +470,7 @@ public class LocomotoraEntity extends AbstractMinecart {
                     enMano.consume(1, jugador);
                     this.combustible += valor;
                     setFuego(true);
-                    this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.FIRECHARGE_USE,
+                    this.level().playSound(null, this.getX(), this.getY() + 1.0, this.getZ(), SoundEvents.FIRECHARGE_USE,
                             SoundSource.NEUTRAL, 0.5F, 1.3F);
                     mostrarEstado(jugador);
                 } else {
@@ -515,22 +578,14 @@ public class LocomotoraEntity extends AbstractMinecart {
     // ================================================================= efectos del cliente
 
     private void tickCliente() {
-        this.anguloRuedasAnterior = this.anguloRuedas;
+        this.recorridoAnterior = this.recorrido;
         double dx = this.getX() - this.xo;
         double dz = this.getZ() - this.zo;
         double distancia = Math.sqrt(dx * dx + dz * dz);
         if (distancia > 1.0E-4 && distancia < 2.0) {
             double sentido = dx * frenteX() + dz * frenteZ() >= 0.0 ? 1.0 : -1.0;
-            this.anguloRuedas += (float) (sentido * distancia / RADIO_RUEDA);
+            this.recorrido += sentido * distancia;
         }
-        if (this.anguloRuedas > DOS_PI) {
-            this.anguloRuedas -= DOS_PI;
-            this.anguloRuedasAnterior -= DOS_PI;
-        } else if (this.anguloRuedas < -DOS_PI) {
-            this.anguloRuedas += DOS_PI;
-            this.anguloRuedasAnterior += DOS_PI;
-        }
-
         if (tieneFuego()) {
             echarHumo(distancia);
         }
@@ -539,28 +594,28 @@ public class LocomotoraEntity extends AbstractMinecart {
     private void echarHumo(double velocidad) {
         double fx = frenteX();
         double fz = frenteZ();
-        // Punta de la chimenea (9 píxeles hacia adelante, 22 de alto)
-        double cx = this.getX() + fx * 0.56;
-        double cy = this.getY() + 1.4;
-        double cz = this.getZ() + fz * 0.56;
+        double cx = this.getX() + fx * this.tipo.chimeneaAdelante();
+        double cy = this.getY() + this.tipo.chimeneaAlto();
+        double cz = this.getZ() + fz * this.tipo.chimeneaAdelante();
         boolean enMarcha = getMarcha() != 0 && velocidad > 0.01;
 
         if (enMarcha) {
-            this.level().addParticle(ParticleTypes.LARGE_SMOKE, cx, cy, cz, 0.0, 0.04, 0.0);
-            if (this.random.nextInt(3) == 0) {
-                this.level().addAlwaysVisibleParticle(ParticleTypes.CAMPFIRE_COSY_SMOKE, true, cx, cy, cz, 0.0, 0.06, 0.0);
+            this.level().addParticle(ParticleTypes.LARGE_SMOKE, cx, cy, cz, 0.0, 0.05, 0.0);
+            if (this.random.nextInt(2) == 0) {
+                this.level().addAlwaysVisibleParticle(ParticleTypes.CAMPFIRE_COSY_SMOKE, true, cx, cy, cz, 0.0, 0.07, 0.0);
             }
-            // Vapor que escapa de los cilindros, a los costados de las ruedas delanteras
+            // Vapor que escapa de los cilindros, a los costados
             if (this.random.nextInt(4) == 0) {
                 double lado = this.random.nextBoolean() ? 1.0 : -1.0;
-                double px = this.getX() + fx * 0.4 - fz * 0.55 * lado;
-                double pz = this.getZ() + fz * 0.4 + fx * 0.55 * lado;
-                this.level().addParticle(ParticleTypes.CLOUD, px, this.getY() + 0.15, pz,
-                        -fz * lado * 0.06, 0.01, fx * lado * 0.06);
+                double ancho = this.tipo.cilindroLado() + 0.15;
+                double px = this.getX() + fx * this.tipo.cilindroAdelante() - fz * ancho * lado;
+                double pz = this.getZ() + fz * this.tipo.cilindroAdelante() + fx * ancho * lado;
+                this.level().addParticle(ParticleTypes.CLOUD, px, this.getY() + this.tipo.cilindroAlto(), pz,
+                        -fz * lado * 0.07, 0.01, fx * lado * 0.07);
             }
-        } else if (this.random.nextInt(4) == 0) {
-            // Caldera encendida pero parada: humito suave
-            this.level().addParticle(ParticleTypes.SMOKE, cx, cy, cz, 0.0, 0.03, 0.0);
+        } else if (this.random.nextInt(3) == 0) {
+            // Caldera encendida pero parada: humo suave
+            this.level().addParticle(ParticleTypes.SMOKE, cx, cy, cz, 0.0, 0.04, 0.0);
         }
     }
 

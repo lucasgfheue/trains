@@ -9,8 +9,10 @@ displayName="${mod_name}"
 authors="${mod_authors}"
 logoFile="locomotora.png"
 description='''
-Una locomotora de vapor que anda sobre los rieles de Minecraft.
-Se carga con carbón, tiene marchas (incluida marcha atrás), silbato, humo y empuja las vagonetas que tenga delante.
+Tres locomotoras de vapor de hasta 3 bloques de alto que andan sobre los rieles de Minecraft:
+la Clásica del Oeste, el Expreso Europeo y el Gigante de Carga.
+Se cargan con carbón, tienen marchas (incluida marcha atrás), silbato, humo, ruedas y bielas animadas,
+y empujan las vagonetas que tengan delante.
 '''
 
 [[dependencies.${mod_id}]]

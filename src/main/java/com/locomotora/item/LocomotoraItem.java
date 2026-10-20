@@ -3,6 +3,7 @@ package com.locomotora.item;
 import java.util.List;
 
 import com.locomotora.entidad.LocomotoraEntity;
+import com.locomotora.entidad.TipoLocomotora;
 import com.locomotora.registro.ModEntidades;
 
 import net.minecraft.ChatFormatting;
@@ -23,11 +24,17 @@ import net.minecraft.world.level.block.state.properties.RailShape;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.Vec3;
 
-/** Ítem que coloca la locomotora sobre un riel, mirando hacia donde mira el jugador. */
+/** Ítem que coloca una locomotora sobre un riel, mirando hacia donde mira el jugador. */
 public class LocomotoraItem extends Item {
+    private final TipoLocomotora tipo;
 
-    public LocomotoraItem(Properties propiedades) {
+    public LocomotoraItem(Properties propiedades, TipoLocomotora tipo) {
         super(propiedades);
+        this.tipo = tipo;
+    }
+
+    public TipoLocomotora getTipo() {
+        return this.tipo;
     }
 
     @Override
@@ -46,7 +53,7 @@ public class LocomotoraItem extends Item {
                     : RailShape.NORTH_SOUTH;
             double altura = forma.isAscending() ? 0.5 : 0.0;
 
-            LocomotoraEntity locomotora = ModEntidades.LOCOMOTORA.get().create(servidor);
+            LocomotoraEntity locomotora = ModEntidades.porTipo(this.tipo).get().create(servidor);
             if (locomotora == null) {
                 return InteractionResult.FAIL;
             }
@@ -74,6 +81,7 @@ public class LocomotoraItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext contexto, List<Component> lineas, TooltipFlag opciones) {
+        lineas.add(Component.translatable("tooltip.locomotora." + this.tipo.id()).withStyle(ChatFormatting.GOLD));
         lineas.add(Component.translatable("tooltip.locomotora.colocar").withStyle(ChatFormatting.GRAY));
         lineas.add(Component.translatable("tooltip.locomotora.carbon").withStyle(ChatFormatting.GRAY));
         lineas.add(Component.translatable("tooltip.locomotora.subir").withStyle(ChatFormatting.GRAY));

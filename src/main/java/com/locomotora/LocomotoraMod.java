@@ -27,10 +27,12 @@ public class LocomotoraMod {
         modEventBus.addListener(this::agregarAPestanaCreativa);
     }
 
-    /** Pone la locomotora en la pestaña "Herramientas y utilidades" del modo creativo, junto a las vagonetas. */
+    /** Pone las locomotoras en la pestaña "Herramientas y utilidades" del modo creativo, junto a las vagonetas. */
     private void agregarAPestanaCreativa(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
-            event.accept(ModItems.LOCOMOTORA.get());
+            event.accept(ModItems.CLASICA.get());
+            event.accept(ModItems.EXPRESO.get());
+            event.accept(ModItems.GIGANTE.get());
         }
     }
 

@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "minecraft:iron_bars"
+    },
+    "F": {
+      "item": "minecraft:furnace"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "M": {
+      "item": "minecraft:minecart"
+    },
+    "P": {
+      "item": "minecraft:iron_block"
+    }
+  },
+  "pattern": [
+    " B ",
+    "IFI",
+    "PMP"
+  ],
+  "result": {
+    "count": 1,
+    "id": "locomotora:locomotora_gigante"
+  }
+}

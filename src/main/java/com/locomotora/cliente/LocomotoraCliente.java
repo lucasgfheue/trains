@@ -1,6 +1,11 @@
 package com.locomotora.cliente;
 
 import com.locomotora.LocomotoraMod;
+import com.locomotora.cliente.modelos.DatosModelo;
+import com.locomotora.cliente.modelos.ModeloClasica;
+import com.locomotora.cliente.modelos.ModeloExpreso;
+import com.locomotora.cliente.modelos.ModeloGigante;
+import com.locomotora.entidad.TipoLocomotora;
 import com.locomotora.registro.ModEntidades;
 
 import net.neoforged.api.distmarker.Dist;
@@ -18,11 +23,25 @@ public class LocomotoraCliente {
         modEventBus.addListener(LocomotoraCliente::registrarModelos);
     }
 
+    public static DatosModelo datosDe(TipoLocomotora tipo) {
+        return switch (tipo) {
+            case CLASICA -> ModeloClasica.DATOS;
+            case EXPRESO -> ModeloExpreso.DATOS;
+            case GIGANTE -> ModeloGigante.DATOS;
+        };
+    }
+
     private static void registrarRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerEntityRenderer(ModEntidades.LOCOMOTORA.get(), LocomotoraRenderer::new);
+        for (TipoLocomotora tipo : TipoLocomotora.values()) {
+            DatosModelo datos = datosDe(tipo);
+            event.registerEntityRenderer(ModEntidades.porTipo(tipo).get(), contexto -> new LocomotoraRenderer(contexto, datos));
+        }
     }
 
     private static void registrarModelos(EntityRenderersEvent.RegisterLayerDefinitions event) {
-        event.registerLayerDefinition(LocomotoraModelo.CAPA, LocomotoraModelo::crearCapa);
+        for (TipoLocomotora tipo : TipoLocomotora.values()) {
+            DatosModelo datos = datosDe(tipo);
+            event.registerLayerDefinition(datos.capa(), datos.fabricaCapa());
+        }
     }
 }

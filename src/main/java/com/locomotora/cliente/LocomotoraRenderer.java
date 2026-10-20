@@ -1,6 +1,8 @@
 package com.locomotora.cliente;
 
-import com.locomotora.LocomotoraMod;
+import java.util.List;
+
+import com.locomotora.cliente.modelos.DatosModelo;
 import com.locomotora.entidad.LocomotoraEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -17,29 +19,29 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Dibuja la locomotora siguiendo la inclinación de los rieles (igual que una vagoneta),
- * pero siempre con la chimenea hacia el frente y con las ruedas y bielas girando.
+ * Dibuja una locomotora siguiendo la inclinación de los rieles (igual que una vagoneta),
+ * siempre con la chimenea hacia el frente, y anima ruedas y bielas según la distancia recorrida.
  */
 public class LocomotoraRenderer extends EntityRenderer<LocomotoraEntity> {
-    private static final ResourceLocation TEXTURA = LocomotoraMod.id("textures/entity/locomotora.png");
-    /** Distancia del eje de la rueda al perno de la biela, en píxeles. */
-    private static final float MANIVELA = 1.6F;
+    /** Los modelos están hechos en unidades de 1/32 de bloque (el doble de detalle que vanilla). */
+    private static final float ESCALA = 0.5F;
+    private static final double UNIDADES_POR_BLOQUE = 32.0;
+    private static final double DOS_PI = Math.PI * 2.0;
 
+    private final DatosModelo datos;
     private final ModelPart raiz;
-    private final ModelPart[] ruedas;
-    private final ModelPart bielaIzquierda;
-    private final ModelPart bielaDerecha;
+    private final ModelPart[] piezasAnimadas;
 
-    public LocomotoraRenderer(EntityRendererProvider.Context contexto) {
+    public LocomotoraRenderer(EntityRendererProvider.Context contexto, DatosModelo datos) {
         super(contexto);
-        this.shadowRadius = 0.7F;
-        this.raiz = contexto.bakeLayer(LocomotoraModelo.CAPA);
-        this.ruedas = new ModelPart[LocomotoraModelo.RUEDAS.length];
-        for (int i = 0; i < this.ruedas.length; i++) {
-            this.ruedas[i] = this.raiz.getChild(LocomotoraModelo.RUEDAS[i]);
+        this.datos = datos;
+        this.shadowRadius = 1.3F;
+        this.raiz = contexto.bakeLayer(datos.capa());
+        List<DatosModelo.Animada> animadas = datos.animadas();
+        this.piezasAnimadas = new ModelPart[animadas.size()];
+        for (int i = 0; i < animadas.size(); i++) {
+            this.piezasAnimadas[i] = this.raiz.getChild(animadas.get(i).parte());
         }
-        this.bielaIzquierda = this.raiz.getChild(LocomotoraModelo.BIELA_IZQUIERDA);
-        this.bielaDerecha = this.raiz.getChild(LocomotoraModelo.BIELA_DERECHA);
     }
 
     @Override
@@ -91,7 +93,6 @@ public class LocomotoraRenderer extends EntityRenderer<LocomotoraEntity> {
             }
         }
 
-        pose.translate(0.0F, 0.375F, 0.0F);
         pose.mulPose(Axis.YP.rotationDegrees(180.0F - yaw));
         pose.mulPose(Axis.ZP.rotationDegrees(-inclinacion));
 
@@ -105,27 +106,40 @@ public class LocomotoraRenderer extends EntityRenderer<LocomotoraEntity> {
             pose.mulPose(Axis.XP.rotationDegrees(Mth.sin(golpe) * golpe * dano / 10.0F * (float) loco.getHurtDir()));
         }
 
-        pose.scale(-1.0F, -1.0F, 1.0F);
+        pose.scale(-ESCALA, -ESCALA, ESCALA);
 
-        // Ruedas y bielas
-        float giro = -loco.getAnguloRuedas(tickParcial);
-        for (ModelPart rueda : this.ruedas) {
-            rueda.zRot = giro;
-        }
-        this.bielaIzquierda.x = MANIVELA * Mth.cos(giro);
-        this.bielaIzquierda.y = LocomotoraModelo.ALTURA_EJE + MANIVELA * Mth.sin(giro);
-        float giroDesfasado = giro + (float) (Math.PI / 2.0);
-        this.bielaDerecha.x = MANIVELA * Mth.cos(giroDesfasado);
-        this.bielaDerecha.y = LocomotoraModelo.ALTURA_EJE + MANIVELA * Mth.sin(giroDesfasado);
+        animar(loco.getRecorrido(tickParcial));
 
-        VertexConsumer vertices = buffers.getBuffer(RenderType.entityCutout(TEXTURA));
+        VertexConsumer vertices = buffers.getBuffer(RenderType.entityCutout(this.datos.textura()));
         this.raiz.render(pose, vertices, luz, OverlayTexture.NO_OVERLAY);
 
         pose.popPose();
     }
 
+    /** Gira las ruedas y mueve las bielas (misma matemática que el estudio de diseño). */
+    private void animar(double recorrido) {
+        List<DatosModelo.Animada> animadas = this.datos.animadas();
+        for (int i = 0; i < animadas.size(); i++) {
+            DatosModelo.Animada a = animadas.get(i);
+            ModelPart pieza = this.piezasAnimadas[i];
+            double vueltas = (recorrido * UNIDADES_POR_BLOQUE / a.radio()) % DOS_PI;
+            float theta = (float) -vueltas + a.fase();
+            if (a.tipo() == DatosModelo.RUEDA) {
+                pieza.zRot = theta;
+            } else {
+                float dx = a.manivela() * Mth.sin(theta);
+                float dy = a.manivela() * (1.0F - Mth.cos(theta));
+                pieza.x = a.x() + dx;
+                pieza.y = a.y() + dy;
+                if (a.tipo() == DatosModelo.BIELA_MOTRIZ) {
+                    pieza.zRot = (float) Math.asin(Mth.clamp(dy / a.largo(), -1.0F, 1.0F));
+                }
+            }
+        }
+    }
+
     @Override
     public ResourceLocation getTextureLocation(LocomotoraEntity loco) {
-        return TEXTURA;
+        return this.datos.textura();
     }
 }
