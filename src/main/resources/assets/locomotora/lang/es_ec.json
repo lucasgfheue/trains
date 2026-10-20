@@ -1,0 +1,22 @@
+{
+  "item.locomotora.locomotora": "Locomotora de vapor",
+  "entity.locomotora.locomotora": "Locomotora de vapor",
+  "subtitles.locomotora.silbato": "Silbato de locomotora",
+  "subtitles.locomotora.resoplido": "Locomotora resopla",
+  "tooltip.locomotora.colocar": "Clic derecho sobre un riel para colocarla",
+  "tooltip.locomotora.carbon": "Clic derecho con carbón: cargar la caldera",
+  "tooltip.locomotora.subir": "Clic derecho con la mano vacía: subirse",
+  "tooltip.locomotora.arrancar": "Shift + clic derecho: arrancar o frenar",
+  "tooltip.locomotora.manejar": "Arriba: W/S cambia la marcha · A/D hace sonar el silbato",
+  "estado.locomotora": "%s  ·  %s",
+  "estado.locomotora.carbon": "Carbón: %s",
+  "estado.locomotora.sin_carbon": "¡Sin carbón!",
+  "marcha.locomotora.atras": "◀ Marcha atrás",
+  "marcha.locomotora.freno": "■ Frenada",
+  "marcha.locomotora.1": "▶ Marcha 1 (lenta)",
+  "marcha.locomotora.2": "▶▶ Marcha 2 (media)",
+  "marcha.locomotora.3": "▶▶▶ Marcha 3 (¡a toda máquina!)",
+  "mensaje.locomotora.sin_carbon": "¡Sin carbón! Cárgala con clic derecho usando carbón",
+  "mensaje.locomotora.caldera_llena": "La caldera está llena",
+  "mensaje.locomotora.trabada": "La locomotora está trabada y se detuvo"
+}

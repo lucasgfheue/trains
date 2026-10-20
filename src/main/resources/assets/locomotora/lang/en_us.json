@@ -1,0 +1,22 @@
+{
+  "item.locomotora.locomotora": "Steam Locomotive",
+  "entity.locomotora.locomotora": "Steam Locomotive",
+  "subtitles.locomotora.silbato": "Locomotive whistles",
+  "subtitles.locomotora.resoplido": "Locomotive chuffs",
+  "tooltip.locomotora.colocar": "Right-click on a rail to place it",
+  "tooltip.locomotora.carbon": "Right-click with coal: fuel the boiler",
+  "tooltip.locomotora.subir": "Right-click with an empty hand: get on",
+  "tooltip.locomotora.arrancar": "Sneak + right-click: start or stop",
+  "tooltip.locomotora.manejar": "Riding: W/S changes gear · A/D blows the whistle",
+  "estado.locomotora": "%s  ·  %s",
+  "estado.locomotora.carbon": "Coal: %s",
+  "estado.locomotora.sin_carbon": "Out of coal!",
+  "marcha.locomotora.atras": "◀ Reverse",
+  "marcha.locomotora.freno": "■ Brake",
+  "marcha.locomotora.1": "▶ Gear 1 (slow)",
+  "marcha.locomotora.2": "▶▶ Gear 2 (medium)",
+  "marcha.locomotora.3": "▶▶▶ Gear 3 (full steam!)",
+  "mensaje.locomotora.sin_carbon": "Out of coal! Right-click it with coal",
+  "mensaje.locomotora.caldera_llena": "The boiler is full",
+  "mensaje.locomotora.trabada": "The locomotive got stuck and stopped"
+}

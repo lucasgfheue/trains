@@ -1,0 +1,15 @@
+{
+  "silbato": {
+    "subtitle": "subtitles.locomotora.silbato",
+    "sounds": [
+      "locomotora:silbato"
+    ]
+  },
+  "resoplido": {
+    "subtitle": "subtitles.locomotora.resoplido",
+    "sounds": [
+      "locomotora:resoplido1",
+      "locomotora:resoplido2"
+    ]
+  }
+}
