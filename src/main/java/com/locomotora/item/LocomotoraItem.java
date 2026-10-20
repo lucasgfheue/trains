@@ -83,7 +83,8 @@ public class LocomotoraItem extends Item {
     public void appendHoverText(ItemStack stack, TooltipContext contexto, List<Component> lineas, TooltipFlag opciones) {
         lineas.add(Component.translatable("tooltip.locomotora." + this.tipo.id()).withStyle(ChatFormatting.GOLD));
         lineas.add(Component.translatable("tooltip.locomotora.colocar").withStyle(ChatFormatting.GRAY));
-        lineas.add(Component.translatable("tooltip.locomotora.carbon").withStyle(ChatFormatting.GRAY));
+        lineas.add(Component.translatable(this.tipo.diesel() ? "tooltip.locomotora.diesel" : "tooltip.locomotora.carbon")
+                .withStyle(ChatFormatting.GRAY));
         lineas.add(Component.translatable("tooltip.locomotora.subir").withStyle(ChatFormatting.GRAY));
         lineas.add(Component.translatable("tooltip.locomotora.arrancar").withStyle(ChatFormatting.GRAY));
         lineas.add(Component.translatable("tooltip.locomotora.manejar").withStyle(ChatFormatting.DARK_AQUA));

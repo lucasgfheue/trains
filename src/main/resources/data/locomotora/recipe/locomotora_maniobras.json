@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "minecraft:iron_bars"
+    },
+    "P": {
+      "item": "minecraft:piston"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "M": {
+      "item": "minecraft:minecart"
+    },
+    "T": {
+      "item": "minecraft:yellow_dye"
+    }
+  },
+  "pattern": [
+    " B ",
+    "IPI",
+    "TMT"
+  ],
+  "result": {
+    "count": 1,
+    "id": "locomotora:locomotora_maniobras"
+  }
+}

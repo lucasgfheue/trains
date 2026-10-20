@@ -41,7 +41,8 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Locomotora de vapor: una vagoneta con motor propio. Hay tres modelos ({@link TipoLocomotora}).
+ * Locomotora: una vagoneta con motor propio. Hay modelos de vapor (carbón) y diésel (bidón de diésel),
+ * ver {@link TipoLocomotora}.
  *
  * <ul>
  *   <li>Clic derecho con carbón / carbón vegetal / bloque de carbón: carga la caldera.</li>
@@ -57,7 +58,9 @@ public class LocomotoraEntity extends AbstractMinecart {
     // ---------------------------------------------------------------- ajustes
     /** Ticks de combustible que da una pieza de carbón (a marcha 1 dura 4 minutos). */
     public static final int CARBON_POR_PIEZA = 4800;
-    /** Capacidad de la caldera: 40 piezas de carbón. */
+    /** Un bidón de diésel rinde como 6 piezas de carbón. */
+    public static final int POR_BIDON = CARBON_POR_PIEZA * 6;
+    /** Capacidad de la caldera o del tanque: 40 piezas de carbón (casi 7 bidones). */
     public static final int COMBUSTIBLE_MAXIMO = CARBON_POR_PIEZA * 40;
 
     public static final int MARCHA_MINIMA = -1;
@@ -221,7 +224,7 @@ public class LocomotoraEntity extends AbstractMinecart {
         if (motorEncendido) {
             this.combustible = Math.max(0, this.combustible - Math.abs(marcha));
             if (this.combustible == 0) {
-                avisarMaquinista(Component.translatable("mensaje.locomotora.sin_carbon").withStyle(ChatFormatting.RED));
+                avisarMaquinista(Component.translatable(clave("mensaje.locomotora.sin_carbon")).withStyle(ChatFormatting.RED));
             }
         }
         setFuego(this.combustible > 0);
@@ -241,8 +244,21 @@ public class LocomotoraEntity extends AbstractMinecart {
             this.ticksTrabada = 0;
         }
 
-        // "Chuf, chuf": el ritmo acompaña a la velocidad
-        if (motorEncendido && avance > 0.02) {
+        if (this.tipo.diesel()) {
+            // Motor diésel: se oye siempre que tenga combustible y acelera con la marcha
+            if (this.combustible > 0) {
+                if (--this.esperaResoplido <= 0) {
+                    float tono = (0.72F + 0.12F * Math.abs(marcha) + (float) Math.min(avance, 0.4) * 0.4F)
+                            * (0.85F + this.tipo.tonoSilbato() * 0.15F);
+                    this.level().playSound(null, this.getX(), this.getY() + 1.0, this.getZ(), ModSonidos.MOTOR.get(),
+                            SoundSource.NEUTRAL, motorEncendido ? 0.9F : 0.5F, tono);
+                    this.esperaResoplido = motorEncendido ? 12 : 22;
+                }
+            } else {
+                this.esperaResoplido = 0;
+            }
+        } else if (motorEncendido && avance > 0.02) {
+            // "Chuf, chuf": el ritmo acompaña a la velocidad
             if (--this.esperaResoplido <= 0) {
                 this.level().playSound(null, this.getX(), this.getY() + 1.0, this.getZ(), ModSonidos.RESOPLIDO.get(),
                         SoundSource.NEUTRAL, 0.8F, (0.9F + this.random.nextFloat() * 0.2F) * (0.5F + this.tipo.tonoSilbato() * 0.5F));
@@ -304,8 +320,9 @@ public class LocomotoraEntity extends AbstractMinecart {
         double x = this.getX() + frenteX() * this.tipo.silbatoAdelante();
         double y = this.getY() + this.tipo.silbatoAlto();
         double z = this.getZ() + frenteZ() * this.tipo.silbatoAdelante();
-        this.level().playSound(null, x, y, z, ModSonidos.SILBATO.get(), SoundSource.NEUTRAL, 4.0F, this.tipo.tonoSilbato());
-        if (this.level() instanceof ServerLevel servidor) {
+        this.level().playSound(null, x, y, z, this.tipo.diesel() ? ModSonidos.BOCINA.get() : ModSonidos.SILBATO.get(),
+                SoundSource.NEUTRAL, 4.0F, this.tipo.tonoSilbato());
+        if (!this.tipo.diesel() && this.level() instanceof ServerLevel servidor) {
             servidor.sendParticles(ParticleTypes.CLOUD, x, y + 0.1, z, 10, 0.05, 0.2, 0.05, 0.03);
         }
     }
@@ -463,18 +480,19 @@ public class LocomotoraEntity extends AbstractMinecart {
         ItemStack enMano = jugador.getItemInHand(mano);
         int valor = valorComoCombustible(enMano);
 
-        // Cargar carbón
+        // Cargar carbón (vapor) o diésel
         if (valor > 0) {
             if (!this.level().isClientSide()) {
                 if (this.combustible + valor <= COMBUSTIBLE_MAXIMO) {
                     enMano.consume(1, jugador);
                     this.combustible += valor;
                     setFuego(true);
-                    this.level().playSound(null, this.getX(), this.getY() + 1.0, this.getZ(), SoundEvents.FIRECHARGE_USE,
+                    this.level().playSound(null, this.getX(), this.getY() + 1.0, this.getZ(),
+                            this.tipo.diesel() ? SoundEvents.BUCKET_EMPTY : SoundEvents.FIRECHARGE_USE,
                             SoundSource.NEUTRAL, 0.5F, 1.3F);
                     mostrarEstado(jugador);
                 } else {
-                    jugador.displayClientMessage(Component.translatable("mensaje.locomotora.caldera_llena")
+                    jugador.displayClientMessage(Component.translatable(clave("mensaje.locomotora.caldera_llena"))
                             .withStyle(ChatFormatting.GOLD), true);
                 }
             }
@@ -490,7 +508,7 @@ public class LocomotoraEntity extends AbstractMinecart {
                     orientarSegunDireccion(this.getX() - jugador.getX(), this.getZ() - jugador.getZ(), formaDelRielActual());
                     cambiarMarcha(2, jugador);
                 } else {
-                    jugador.displayClientMessage(Component.translatable("mensaje.locomotora.sin_carbon")
+                    jugador.displayClientMessage(Component.translatable(clave("mensaje.locomotora.sin_carbon"))
                             .withStyle(ChatFormatting.RED), true);
                 }
             }
@@ -511,7 +529,11 @@ public class LocomotoraEntity extends AbstractMinecart {
         return InteractionResult.SUCCESS;
     }
 
-    public static int valorComoCombustible(ItemStack stack) {
+    /** Cuánto combustible da un ítem: carbón para las de vapor, bidón de diésel para las diésel. */
+    public int valorComoCombustible(ItemStack stack) {
+        if (this.tipo.diesel()) {
+            return stack.is(ModItems.BIDON_DIESEL.get()) ? POR_BIDON : 0;
+        }
         if (stack.is(Items.COAL_BLOCK)) {
             return CARBON_POR_PIEZA * 9;
         }
@@ -560,11 +582,20 @@ public class LocomotoraEntity extends AbstractMinecart {
 
     private void mostrarEstado(Player jugador) {
         Component marcha = Component.translatable("marcha.locomotora." + nombreMarcha(getMarcha()));
+        int unidad = this.tipo.diesel() ? POR_BIDON : CARBON_POR_PIEZA;
         Component carbon = this.combustible > 0
-                ? Component.translatable("estado.locomotora.carbon",
-                        String.format(Locale.ROOT, "%.1f", this.combustible / (double) CARBON_POR_PIEZA))
-                : Component.translatable("estado.locomotora.sin_carbon").withStyle(ChatFormatting.RED);
+                ? Component.translatable(clave("estado.locomotora.carbon"),
+                        String.format(Locale.ROOT, "%.1f", this.combustible / (double) unidad))
+                : Component.translatable(clave("estado.locomotora.sin_carbon")).withStyle(ChatFormatting.RED);
         jugador.displayClientMessage(Component.translatable("estado.locomotora", marcha, carbon), true);
+    }
+
+    /** Las diésel usan sus propios textos: "carbon" pasa a "diesel" y "caldera_llena" a "tanque_lleno". */
+    private String clave(String deVapor) {
+        if (!this.tipo.diesel()) {
+            return deVapor;
+        }
+        return deVapor.replace("caldera_llena", "tanque_lleno").replace("carbon", "diesel");
     }
 
     private static String nombreMarcha(int marcha) {
@@ -599,6 +630,17 @@ public class LocomotoraEntity extends AbstractMinecart {
         double cz = this.getZ() + fz * this.tipo.chimeneaAdelante();
         boolean enMarcha = getMarcha() != 0 && velocidad > 0.01;
 
+        if (this.tipo.diesel()) {
+            // Escape del motor diésel: humo oscuro, más espeso en marcha
+            if (enMarcha || this.random.nextInt(3) == 0) {
+                this.level().addParticle(ParticleTypes.LARGE_SMOKE, cx, cy, cz, 0.0, enMarcha ? 0.09 : 0.04, 0.0);
+            }
+            if (enMarcha && this.random.nextInt(2) == 0) {
+                this.level().addParticle(ParticleTypes.SMOKE, cx, cy, cz, 0.0, 0.12, 0.0);
+            }
+            return;
+        }
+
         if (enMarcha) {
             this.level().addParticle(ParticleTypes.LARGE_SMOKE, cx, cy, cz, 0.0, 0.05, 0.0);
             if (this.random.nextInt(2) == 0) {
@@ -624,10 +666,12 @@ public class LocomotoraEntity extends AbstractMinecart {
     @Override
     public void destroy(DamageSource fuente) {
         super.destroy(fuente);
-        // Devuelve el carbón que quedaba en la caldera
-        int piezas = this.combustible / CARBON_POR_PIEZA;
+        // Devuelve el combustible que quedaba (carbón o bidones de diésel enteros)
+        int piezas = this.combustible / (this.tipo.diesel() ? POR_BIDON : CARBON_POR_PIEZA);
         if (piezas > 0 && this.level().getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
-            this.spawnAtLocation(new ItemStack(Items.COAL, Math.min(piezas, 64)));
+            this.spawnAtLocation(this.tipo.diesel()
+                    ? new ItemStack(ModItems.BIDON_DIESEL.get(), Math.min(piezas, 16))
+                    : new ItemStack(Items.COAL, Math.min(piezas, 64)));
         }
         this.combustible = 0;
     }

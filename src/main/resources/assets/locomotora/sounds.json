@@ -11,5 +11,17 @@
       "locomotora:resoplido1",
       "locomotora:resoplido2"
     ]
+  },
+  "bocina": {
+    "subtitle": "subtitles.locomotora.bocina",
+    "sounds": [
+      "locomotora:bocina"
+    ]
+  },
+  "motor": {
+    "subtitle": "subtitles.locomotora.motor",
+    "sounds": [
+      "locomotora:motor"
+    ]
   }
 }

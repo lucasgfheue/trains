@@ -2,9 +2,13 @@ package com.locomotora.cliente;
 
 import com.locomotora.LocomotoraMod;
 import com.locomotora.cliente.modelos.DatosModelo;
+import com.locomotora.cliente.modelos.ModeloAmericana;
 import com.locomotora.cliente.modelos.ModeloClasica;
+import com.locomotora.cliente.modelos.ModeloEuropea;
 import com.locomotora.cliente.modelos.ModeloExpreso;
 import com.locomotora.cliente.modelos.ModeloGigante;
+import com.locomotora.cliente.modelos.ModeloManiobras;
+import com.locomotora.cliente.modelos.ModeloSwitcher;
 import com.locomotora.entidad.TipoLocomotora;
 import com.locomotora.registro.ModEntidades;
 
@@ -28,6 +32,10 @@ public class LocomotoraCliente {
             case CLASICA -> ModeloClasica.DATOS;
             case EXPRESO -> ModeloExpreso.DATOS;
             case GIGANTE -> ModeloGigante.DATOS;
+            case AMERICANA -> ModeloAmericana.DATOS;
+            case SWITCHER -> ModeloSwitcher.DATOS;
+            case EUROPEA -> ModeloEuropea.DATOS;
+            case MANIOBRAS -> ModeloManiobras.DATOS;
         };
     }
 

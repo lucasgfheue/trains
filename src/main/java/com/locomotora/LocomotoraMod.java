@@ -1,5 +1,6 @@
 package com.locomotora;
 
+import com.locomotora.entidad.TipoLocomotora;
 import com.locomotora.registro.ModEntidades;
 import com.locomotora.registro.ModItems;
 import com.locomotora.registro.ModSonidos;
@@ -27,12 +28,13 @@ public class LocomotoraMod {
         modEventBus.addListener(this::agregarAPestanaCreativa);
     }
 
-    /** Pone las locomotoras en la pestaña "Herramientas y utilidades" del modo creativo, junto a las vagonetas. */
+    /** Pone las locomotoras y el bidón de diésel en la pestaña "Herramientas y utilidades" del modo creativo, junto a las vagonetas. */
     private void agregarAPestanaCreativa(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
-            event.accept(ModItems.CLASICA.get());
-            event.accept(ModItems.EXPRESO.get());
-            event.accept(ModItems.GIGANTE.get());
+            for (TipoLocomotora tipo : TipoLocomotora.values()) {
+                event.accept(ModItems.porTipo(tipo).get());
+            }
+            event.accept(ModItems.BIDON_DIESEL.get());
         }
     }
 

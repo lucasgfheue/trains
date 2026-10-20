@@ -15,6 +15,10 @@ public final class ModSonidos {
     public static final DeferredHolder<SoundEvent, SoundEvent> SILBATO = registrar("silbato");
     /** "Chuf" del vapor saliendo de los cilindros, al ritmo de las ruedas. */
     public static final DeferredHolder<SoundEvent, SoundEvent> RESOPLIDO = registrar("resoplido");
+    /** Bocina de cinco tonos de las diésel. */
+    public static final DeferredHolder<SoundEvent, SoundEvent> BOCINA = registrar("bocina");
+    /** Ruido del motor diésel (se repite encimado mientras está encendido). */
+    public static final DeferredHolder<SoundEvent, SoundEvent> MOTOR = registrar("motor");
 
     private static DeferredHolder<SoundEvent, SoundEvent> registrar(String nombre) {
         return SONIDOS.register(nombre, () -> SoundEvent.createVariableRangeEvent(LocomotoraMod.id(nombre)));

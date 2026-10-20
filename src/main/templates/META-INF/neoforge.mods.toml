@@ -9,10 +9,10 @@ displayName="${mod_name}"
 authors="${mod_authors}"
 logoFile="locomotora.png"
 description='''
-Tres locomotoras de vapor de hasta 3 bloques de alto que andan sobre los rieles de Minecraft:
-la Clásica del Oeste, el Expreso Europeo y el Gigante de Carga.
-Se cargan con carbón, tienen marchas (incluida marcha atrás), silbato, humo, ruedas y bielas animadas,
-y empujan las vagonetas que tengan delante.
+Siete locomotoras de hasta 3 bloques de alto que andan sobre los rieles de Minecraft.
+Vapor (carbón): Clásica del Oeste, Expreso Europeo y Gigante de Carga.
+Diésel (bidón de diésel): Aerodinámica Americana, Road Switcher, Europea Moderna y Maniobras.
+Tienen marchas (incluida marcha atrás), silbato o bocina, humo, ruedas animadas y empujan las vagonetas que tengan delante.
 '''
 
 [[dependencies.${mod_id}]]
