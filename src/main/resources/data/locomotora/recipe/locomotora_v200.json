@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "R": {
+      "item": "minecraft:rail"
+    },
+    "F": {
+      "item": "minecraft:piston"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "M": {
+      "item": "minecraft:minecart"
+    },
+    "P": {
+      "item": "minecraft:red_dye"
+    }
+  },
+  "pattern": [
+    " R ",
+    "IFI",
+    "PMP"
+  ],
+  "result": {
+    "count": 1,
+    "id": "locomotora:locomotora_v200"
+  }
+}

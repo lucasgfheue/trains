@@ -6,9 +6,12 @@ import com.locomotora.cliente.modelos.ModeloAmericana;
 import com.locomotora.cliente.modelos.ModeloClasica;
 import com.locomotora.cliente.modelos.ModeloEuropea;
 import com.locomotora.cliente.modelos.ModeloExpreso;
+import com.locomotora.cliente.modelos.ModeloF7;
 import com.locomotora.cliente.modelos.ModeloGigante;
 import com.locomotora.cliente.modelos.ModeloManiobras;
+import com.locomotora.cliente.modelos.ModeloScotsman;
 import com.locomotora.cliente.modelos.ModeloSwitcher;
+import com.locomotora.cliente.modelos.ModeloV200;
 import com.locomotora.entidad.TipoLocomotora;
 import com.locomotora.registro.ModEntidades;
 
@@ -36,6 +39,9 @@ public class LocomotoraCliente {
             case SWITCHER -> ModeloSwitcher.DATOS;
             case EUROPEA -> ModeloEuropea.DATOS;
             case MANIOBRAS -> ModeloManiobras.DATOS;
+            case SCOTSMAN -> ModeloScotsman.DATOS;
+            case F7 -> ModeloF7.DATOS;
+            case V200 -> ModeloV200.DATOS;
         };
     }
 

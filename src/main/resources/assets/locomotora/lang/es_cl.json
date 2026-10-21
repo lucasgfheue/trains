@@ -45,5 +45,14 @@
   "estado.locomotora.diesel": "Diésel: %s bidones",
   "estado.locomotora.sin_diesel": "¡Sin diésel!",
   "mensaje.locomotora.sin_diesel": "¡Sin diésel! Cárgala con clic derecho usando un bidón de diésel",
-  "mensaje.locomotora.tanque_lleno": "El tanque está lleno"
+  "mensaje.locomotora.tanque_lleno": "El tanque está lleno",
+  "item.locomotora.locomotora_scotsman": "Locomotora Flying Scotsman",
+  "entity.locomotora.locomotora_scotsman": "Locomotora Flying Scotsman",
+  "tooltip.locomotora.scotsman": "Vapor real de 1923, con su ténder · hasta 8 bloques/s · silbato de campana",
+  "item.locomotora.locomotora_f7": "Locomotora EMD F7",
+  "entity.locomotora.locomotora_f7": "Locomotora EMD F7",
+  "tooltip.locomotora.f7": "Diésel real de 1949 · hasta 8 bloques/s · bocina americana",
+  "item.locomotora.locomotora_v200": "Locomotora V 200",
+  "entity.locomotora.locomotora_v200": "Locomotora V 200",
+  "tooltip.locomotora.v200": "Diésel real alemana de 1953 · hasta 8 bloques/s · arranque rápido · bocina aguda"
 }

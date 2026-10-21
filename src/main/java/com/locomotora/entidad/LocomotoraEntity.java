@@ -139,7 +139,8 @@ public class LocomotoraEntity extends AbstractMinecart {
     /** El modelo es mucho más grande que la caja de colisión: así no desaparece al mirarlo de cerca. */
     @Override
     public AABB getBoundingBoxForCulling() {
-        return super.getBoundingBoxForCulling().inflate(3.4, 0.0, 3.4).expandTowards(0.0, 2.0, 0.0);
+        double alcance = Math.max(3.4, Math.max(this.tipo.largoFrente(), this.tipo.largoAtras()) + 1.0);
+        return super.getBoundingBoxForCulling().inflate(alcance, 0.0, alcance).expandTowards(0.0, 2.0, 0.0);
     }
 
     /** Más fácil de apuntar con el clic. */

@@ -21,6 +21,9 @@ public final class ModEntidades {
     public static final DeferredHolder<EntityType<?>, EntityType<LocomotoraEntity>> SWITCHER = registrar(TipoLocomotora.SWITCHER);
     public static final DeferredHolder<EntityType<?>, EntityType<LocomotoraEntity>> EUROPEA = registrar(TipoLocomotora.EUROPEA);
     public static final DeferredHolder<EntityType<?>, EntityType<LocomotoraEntity>> MANIOBRAS = registrar(TipoLocomotora.MANIOBRAS);
+    public static final DeferredHolder<EntityType<?>, EntityType<LocomotoraEntity>> SCOTSMAN = registrar(TipoLocomotora.SCOTSMAN);
+    public static final DeferredHolder<EntityType<?>, EntityType<LocomotoraEntity>> F7 = registrar(TipoLocomotora.F7);
+    public static final DeferredHolder<EntityType<?>, EntityType<LocomotoraEntity>> V200 = registrar(TipoLocomotora.V200);
 
     private static DeferredHolder<EntityType<?>, EntityType<LocomotoraEntity>> registrar(TipoLocomotora tipo) {
         String nombre = "locomotora_" + tipo.id();
@@ -43,6 +46,9 @@ public final class ModEntidades {
             case SWITCHER -> SWITCHER;
             case EUROPEA -> EUROPEA;
             case MANIOBRAS -> MANIOBRAS;
+            case SCOTSMAN -> SCOTSMAN;
+            case F7 -> F7;
+            case V200 -> V200;
         };
     }
 

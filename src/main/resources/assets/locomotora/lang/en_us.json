@@ -45,5 +45,14 @@
   "estado.locomotora.diesel": "Diesel: %s cans",
   "estado.locomotora.sin_diesel": "Out of diesel!",
   "mensaje.locomotora.sin_diesel": "Out of diesel! Right-click it with a diesel can",
-  "mensaje.locomotora.tanque_lleno": "The tank is full"
+  "mensaje.locomotora.tanque_lleno": "The tank is full",
+  "item.locomotora.locomotora_scotsman": "Flying Scotsman Locomotive",
+  "entity.locomotora.locomotora_scotsman": "Flying Scotsman Locomotive",
+  "tooltip.locomotora.scotsman": "Real 1923 steam engine with its tender · up to 8 blocks/s · chime whistle",
+  "item.locomotora.locomotora_f7": "EMD F7 Locomotive",
+  "entity.locomotora.locomotora_f7": "EMD F7 Locomotive",
+  "tooltip.locomotora.f7": "Real 1949 diesel · up to 8 blocks/s · American horn",
+  "item.locomotora.locomotora_v200": "V 200 Locomotive",
+  "entity.locomotora.locomotora_v200": "V 200 Locomotive",
+  "tooltip.locomotora.v200": "Real 1953 German diesel · up to 8 blocks/s · quick start · high horn"
 }

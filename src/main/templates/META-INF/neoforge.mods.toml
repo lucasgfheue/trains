@@ -9,9 +9,10 @@ displayName="${mod_name}"
 authors="${mod_authors}"
 logoFile="locomotora.png"
 description='''
-Siete locomotoras de hasta 3 bloques de alto que andan sobre los rieles de Minecraft.
+Diez locomotoras de hasta 3 bloques de alto que andan sobre los rieles de Minecraft.
 Vapor (carbón): Clásica del Oeste, Expreso Europeo y Gigante de Carga.
 Diésel (bidón de diésel): Aerodinámica Americana, Road Switcher, Europea Moderna y Maniobras.
+Trenes reales al estilo Traincraft: Flying Scotsman con su ténder, EMD F7 y V 200, que siguen la vía con sus bogies.
 Tienen marchas (incluida marcha atrás), silbato o bocina, humo, ruedas animadas y empujan las vagonetas que tengan delante.
 '''
 

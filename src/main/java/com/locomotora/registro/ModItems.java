@@ -18,6 +18,9 @@ public final class ModItems {
     public static final DeferredItem<LocomotoraItem> SWITCHER = registrar(TipoLocomotora.SWITCHER);
     public static final DeferredItem<LocomotoraItem> EUROPEA = registrar(TipoLocomotora.EUROPEA);
     public static final DeferredItem<LocomotoraItem> MANIOBRAS = registrar(TipoLocomotora.MANIOBRAS);
+    public static final DeferredItem<LocomotoraItem> SCOTSMAN = registrar(TipoLocomotora.SCOTSMAN);
+    public static final DeferredItem<LocomotoraItem> F7 = registrar(TipoLocomotora.F7);
+    public static final DeferredItem<LocomotoraItem> V200 = registrar(TipoLocomotora.V200);
 
     /** Combustible de las locomotoras diésel. */
     public static final DeferredItem<Item> BIDON_DIESEL = ITEMS.register("bidon_diesel",
@@ -37,6 +40,9 @@ public final class ModItems {
             case SWITCHER -> SWITCHER;
             case EUROPEA -> EUROPEA;
             case MANIOBRAS -> MANIOBRAS;
+            case SCOTSMAN -> SCOTSMAN;
+            case F7 -> F7;
+            case V200 -> V200;
         };
     }
 
